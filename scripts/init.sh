@@ -1,5 +1,6 @@
 #!/bin/bash
 
-/tmp/scripts/init-db.sh
+if [ ! -d "/usr/local/mysql/data/mysql" ]; then
+  /tmp/scripts/init-db.sh
+fi
 /tmp/scripts/run-db.sh
-

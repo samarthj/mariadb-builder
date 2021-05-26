@@ -1,0 +1,25 @@
+/usr/local/mysql/data/mariadb-slow.log {
+    su mysql mysql
+    missingok
+    create 660 mysql mysql
+    notifempty
+    daily
+    minsize 100K
+    size 2M
+    rotate 30
+    dateext
+    dateformat .%Y-%m-%d-%H-%M-%S
+    compress
+    delaycompress
+    sharedscripts
+    olddir log_archive/
+    createolddir 770 mysql mysql
+  postrotate
+    if test -x /usr/local/mysql/bin/mysqladmin && \
+      /usr/local/mysql/bin/mysqladmin ping &>/dev/null
+    then
+      /usr/local/mysql/bin/mysqladmin --local flush-error-log \
+        flush-engine-log flush-general-log flush-slow-log
+    fi
+  endscript
+}
