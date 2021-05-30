@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.15)
+
+set_property(GLOBAL PROPERTY CXX_STANDARD 17)
+set_property(GLOBAL PROPERTY CXX_STANDARD_REQUIRED ON)
+
+# set_property(GLOBAL PROPERTY BSON_INCLUDE /usr/lib/include/libbson-1.0)
+# set_property(GLOBAL PROPERTY MONGOC_INCLUDE /usr/lib/include/libmongoc-1.0)
+# link_libraries(/usr/lib/x86_64-linux-gnu/libbson-1.0-0.so)
+# link_libraries(/usr/lib/x86_64-linux-gnu/libmongoc-1.0-0.so)
+link_libraries(/usr/lib/x86_64-linux-gnu/libtcmalloc.so)
