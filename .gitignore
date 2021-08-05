@@ -1,9 +1,6 @@
 testing/
-ubuntu/cmake-output.txt
-ubuntu/cmake-options.txt
 alpine/
 debian/
 scripts/
-server/
 */cmake-output.txt
 */cmake-options.txt
