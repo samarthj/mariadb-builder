@@ -1,0 +1,69 @@
+version: '3'
+x-deploy1: &deploy-conf1
+  resources:
+    limits:
+      memory: 256M
+      cpus: '1'
+x-deploy2: &deploy-conf2
+  resources:
+    limits:
+      memory: 512M
+      cpus: '2'
+x-deploy3: &deploy-conf3
+  resources:
+    limits:
+      memory: 768M
+      cpus: '6'
+x-deploy4: &deploy-conf4
+  resources:
+    limits:
+      memory: 1G
+      cpus: '4'
+x-deploy5: &mysql-conf
+  resources:
+    limits:
+      memory: 6G
+x-server: &server
+  env_file: .env # creds would generally be here
+  pull_policy: always
+  restart: unless-stopped
+  deploy: *deploy-conf4
+  labels:
+    - io.containers.autoupdate=true
+  network_mode: servers
+  tmpfs:
+    - /tmp
+
+services:
+  mariadb:
+    <<: *server
+    image: ghcr.io/samarthj/mariadb:10.6.5
+    container_name: mariadb
+    volumes:
+      - ${DB_MOUNT}/config:/etc/mysql/conf.d:rshared
+      - ${DB_MOUNT}/data:/usr/local/mysql/data:rshared
+      - ${DB_MOUNT}/data2:/usr/local/mysql/data2:rshared # not needed, just an example
+      - ./scripts:/tmp/scripts:rprivate # not needed, just easier to tinker with for development
+    ports:
+      - 33306:3306/tcp
+    deploy: *mysql-conf
+  phpmyadmin:
+    <<: *server
+    image: docker.io/phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOSTS=mariadb
+      - PMA_PORTS=3306
+    ports:
+      - 30080:80
+    depends_on:
+      - mariadb
+    deploy: *mysql-conf2
+
+
+networks:
+  default:
+    name: servers
+    external: true
+
