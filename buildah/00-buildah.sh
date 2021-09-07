@@ -75,17 +75,16 @@ apt install -y --no-install-recommends \
   libreadline8 libxml2 unixodbc \
   zlib1g liblz4-1 libzstd1 \
   libjemalloc2 openssl \
-  libcurl4 libncurses6 libedit2 \
-  libmongoc-1.0-0 libbson-1.0-0
+  libcurl4 libncurses6 libedit2 libmongoc-1.0-0 libbson-1.0-0
 EOU
 
   buildah config --env PATH="\$PATH:/usr/local/mysql/bin" "$runtime"
   # buildah run "$runtime" ln -sf "/usr/share/zoneinfo/$TZ" /etc/localtime
-  # buildah run "$runtime" groupadd -g 1001 "${RUN_USER}"
-  # buildah run "$runtime" useradd -M -g "${RUN_USER}" -u 1000 "${RUN_USER}"
-  # buildah run "$runtime" mkdir -p /home/"${RUN_USER}"
-  # buildah run "$runtime" touch /home/"${RUN_USER}"/.bashrc
-  # buildah run "$runtime" sh -c "echo 'umask 002' > /home/${RUN_USER}/.bashrc"
+  buildah run "$runtime" groupadd -g 1001 "${RUN_USER}"
+  buildah run "$runtime" useradd -M -g "${RUN_USER}" -u 1000 "${RUN_USER}"
+  buildah run "$runtime" mkdir -p /home/"${RUN_USER}"
+  buildah run "$runtime" touch /home/"${RUN_USER}"/.bashrc
+  buildah run "$runtime" sh -c "echo 'umask 002' > /home/${RUN_USER}/.bashrc"
 
   buildah run "$runtime" mkdir /usr/local/mysql
   buildah copy --from="$mariadb_built_container" "$runtime" / /usr/local/mysql
