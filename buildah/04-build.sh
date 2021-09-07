@@ -23,7 +23,7 @@ if [ -z "$package" ]; then
   heading "Making mariadb..."
 
   buildah unshare --mount "U_SOURCE=$source_container" bash <<EOU
-buildah run -v "\${U_SOURCE}/:/tmp/server" -v "${CONTEXT}:/tmp/up" "$builder" bash <"${CONTEXT}/ubuntu/make.sh"
+buildah run -v "\${U_SOURCE}/:/tmp/server" -v "${CONTEXT}:/tmp/up" "$builder" bash <"${SCRIPT_DIR}/make.sh"
 EOU
 
   buildah rm "$source_container"

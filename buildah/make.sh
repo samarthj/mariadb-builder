@@ -89,5 +89,3 @@ cmake -LAH --parallel="${CORES}" -GNinja "${cmake_options[@]}" /tmp/server 2>&1 
 # cmake -B /tmp/build -S /tmp/server -DCMAKE_EXE_LINKER_FLAGS='-ltcmalloc' -Wno-dev -DWITH_SAFEMALLOC=OFF -DCMAKE_BUILD_TYPE=MinSizeRel -DWITH_URING=ON -DWITH_UNIT_TESTS=OFF -DWITH_WSREP=OFF -DTMPDIR=/tmp -DCONNECT_WITH_MONGO=ON -DWITH_ROCKSDB_JEMALLOC=ON -LAH 2>&1 | tee /tmp/up/ubuntu/cmake-options.txt
 
 cmake --build /tmp/build --parallel "${CORES}" --target package | tee /tmp/up/ubuntu/cmake-output.txt
-
-ls -la /tmp/build/mariadb-10.6.2-linux-x86_64.tar.gz

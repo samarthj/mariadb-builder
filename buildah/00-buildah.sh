@@ -1,9 +1,12 @@
 #!/bin/bash
 
+export SCRIPT_DIR="${SCRIPT_DIR:-$(dirname "$0")}"
+export CONTEXT=${CONTEXT:-${SCRIPT_DIR%/*}}
+
 echo "The script you are running has:"
 echo " -> basename - $(basename "$0")"
-echo " -> dirname - $(dirname "$0")"
-echo " -> working directory - $(pwd)"
+echo " -> SCRIPT_DIR - $SCRIPT_DIR"
+echo " -> CONTEXT - $CONTEXT"
 
 set -o errexit
 
@@ -12,12 +15,12 @@ source "$(dirname "$0")/util.sh"
 
 trap_exec() {
   echo "Exit Code - $?"
-  heading "Cleaning up containers..."
-  buildah containers -a || true
+  # heading "Cleaning up containers..."
+  # buildah containers -a || true
   # buildah rm -a || true
-  heading "Cleaning up images..."
-  buildah images -a --filter "reference=${BUILD_RES_PREFIX}mariadb*" || true
-  buildah rmi -p || true
+  # heading "Cleaning up images..."
+  # buildah images -a --filter "reference=${BUILD_RES_PREFIX}mariadb*" || true
+  # buildah rmi -p || true
   # buildah images -a --format '{{.Name}}:{{.Tag}}' |
   #   grep "${BUILD_RES_PREFIX}mariadb*" |
   #   xargs -I{} buildah rmi -f {} || true
@@ -33,8 +36,6 @@ export RUN_USER=${RUN_USER:-"mysql"}
 export CORES=${CORES:-$(nproc)}
 export TZ=${TZ:"America/Los_Angeles"}
 
-export CONTEXT="/home/sam/ws/mariadb-builder"
-
 mariadb_built_image_name="${BUILD_RES_PREFIX}mariadb-complete:${OS_VER}"
 mariadb_built_container=$(get_container_id "$mariadb_built_image_name")
 
@@ -43,16 +44,16 @@ common_image_name="${common_image_name_only}:${OS_VER}"
 
 if [ -z "$mariadb_built_container" ] && [ -z "$(get_image "$mariadb_built_image_name")" ]; then
   # shellcheck disable=SC1091
-  source "${CONTEXT}/ubuntu/01-base.sh"
+  source "${SCRIPT_DIR}/01-base.sh"
 
   # shellcheck disable=SC1091
-  source "${CONTEXT}/ubuntu/02-source.sh"
+  source "${SCRIPT_DIR}/02-source.sh"
 
   # shellcheck disable=SC1091
-  source "${CONTEXT}/ubuntu/03-build_base.sh"
+  source "${SCRIPT_DIR}/03-build_base.sh"
 
   # shellcheck disable=SC1091
-  source "${CONTEXT}/ubuntu/04-build.sh"
+  source "${SCRIPT_DIR}/04-build.sh"
   ending "Build complete"
 fi
 
