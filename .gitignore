@@ -1,3 +1,4 @@
 testing/
-*/cmake-output.txt
-*/cmake-options.txt
+cmake-output.txt
+cmake-options.txt
+.env
