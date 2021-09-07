@@ -1,0 +1,96 @@
+FROM docker.io/debian:sid as common
+LABEL maintainer="Sam <dev@samarthj.com>"
+LABEL org.opencontainers.image.source="https://github.com/samarthj/mariadb-builder"
+
+WORKDIR /tmp
+RUN apt update && \
+  apt install -y --no-install-recommends gnupg git ca-certificates openssl curl
+ENV MARIADB_VER="10.6"
+RUN sed -n -e 's/^ID=//p' /etc/os-release > /tmp/OS_NAME
+# RUN sed -n -e 's/^VERSION_CODENAME=//p' /etc/os-release > /tmp/OS_CODENAME
+RUN echo "sid" > /tmp/OS_CODENAME
+
+FROM common as source
+RUN git clone \
+  --depth=1 \
+  --recurse-submodules \
+  --shallow-submodules \
+  -j "$(nproc)" \
+  --branch "bb-${MARIADB_VER}-release" \
+  "https://github.com/MariaDB/server.git"
+
+
+FROM common as build
+WORKDIR /tmp
+RUN mkdir -p "/usr/share/keyrings" && ls -la /tmp && cat /etc/os-release
+RUN cat /tmp/OS_CODENAME && \
+  repo_url="http://sfo1.mirrors.digitalocean.com/mariadb/repo/${MARIADB_VER}/$(cat /tmp/OS_NAME)" && \
+  key_location="/usr/share/keyrings/mariadb-archive-keyring.gpg" && \
+  curl https://mariadb.org/mariadb_release_signing_key.asc | gpg --dearmor > $key_location && \
+  mkdir -p "/etc/apt/sources.list.d" && \
+  echo "deb [signed-by=$key_location] $repo_url $(cat /tmp/OS_CODENAME) main" > /etc/apt/sources.list.d/mariadb.list && \
+  echo "deb-src [signed-by=$key_location] $repo_url $(cat /tmp/OS_CODENAME) main" >> /etc/apt/sources.list.d/mariadb.list
+RUN cat /etc/apt/sources.list.d/mariadb.list
+RUN apt update && \
+  apt build-dep -y mariadb-server &&\
+  apt install -y --no-install-recommends \
+  ccache \
+  libgoogle-perftools-dev \
+  ninja-build \
+  git libreadline-dev pkg-config \
+  libjemalloc-dev \
+  libevent-dev \
+  libmsgpack-dev libczmq-dev \
+  zlib1g-dev \
+  curl \
+  binutils-dev \
+  libpthreadpool-dev libpthread-stubs0-dev \
+  libwrap0-dev \
+  libmecab-dev libstemmer-dev \
+  libpcre2-posix2 \
+  libmongoc-dev libbson-dev
+COPY --from=source /tmp/server /tmp/server
+RUN sed -n -e 's/^MYSQL_VERSION_PATCH=//p' /tmp/server/VERSION > /tmp/MARIADB_PATCH
+COPY ./buildah/make.sh /tmp/make.sh
+RUN chmod +x /tmp/make.sh && /tmp/make.sh
+RUN tar -zpxf /tmp/build/mariadb-${MARIADB_VER}.$(cat /tmp/MARIADB_PATCH)-linux-x86_64.tar.gz -C /tmp/ && \
+  mv /tmp/mariadb-${MARIADB_VER}.$(cat /tmp/MARIADB_PATCH)-linux-x86_64 /tmp/mariadb && \
+  rm -rf /tmp/mariadb/man /tmp/mariadb/mysql-test
+
+FROM docker.io/debian:sid-slim as release
+ENV RUN_USER="mysql"
+ENV TZ="America/Los_Angeles"
+RUN apt update && apt -y upgrade && apt install -y --no-install-recommends \
+  gnutls-bin tzdata logrotate expect openssl \
+  libgoogle-perftools4 \
+  libwrap0 \
+  liburing-dev libpmem1 libnuma1 \
+  libreadline8 libxml2 unixodbc \
+  zlib1g liblz4-1 libzstd1 \
+  libjemalloc2 \
+  libcurl4 libncurses6 libedit2 \
+  libmongoc-1.0-0 libbson-1.0-0
+
+RUN groupadd -g 1001 "${RUN_USER}"
+RUN useradd -M -g "${RUN_USER}" -u 1000 "${RUN_USER}"
+RUN mkdir -p /home/"${RUN_USER}"
+RUN touch /home/"${RUN_USER}"/.bashrc
+RUN sh -c "echo 'umask 002' > /home/${RUN_USER}/.bashrc"
+
+RUN mkdir -p /etc/mysql/conf.d
+
+COPY ./scripts /tmp/scripts
+COPY ./my.cnf /etc/mysql/my.cnf
+COPY ./logrotate /etc/logrotate.d/mariadb_slow_log
+
+ENV TZ="$TZ"
+
+COPY --from=build /tmp/mariadb /usr/local/mysql
+ENV PATH="${PATH}:/usr/local/mysql/bin"
+RUN ls -la /usr/local/mysql && mkdir -p /usr/local/mysql/data
+RUN ln -s /usr/local/mysql/support-files/systemd/* /lib/systemd/system/
+
+ENTRYPOINT [ "/tmp/scripts/init.sh" ]
+VOLUME [ "/usr/local/mysql/data", "/etc/mysql/conf.d" ]
+
+EXPOSE 3306
