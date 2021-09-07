@@ -75,7 +75,8 @@ apt install -y --no-install-recommends \
   libreadline8 libxml2 unixodbc \
   zlib1g liblz4-1 libzstd1 \
   libjemalloc2 openssl \
-  libcurl4 libncurses6 libedit2 libmongoc-1.0-0 libbson-1.0-0
+  libcurl4 libncurses6 libedit2 \
+  libmongoc-1.0-0 libbson-1.0-0
 EOU
 
   buildah config --env PATH="\$PATH:/usr/local/mysql/bin" "$runtime"
