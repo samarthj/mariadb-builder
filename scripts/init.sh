@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [ -n "$#" ]; then
-  "$#"
+if [ -n "$*" ]; then
+  "$*"
 else
   if [ ! -d "/usr/local/mysql/data/mysql" ]; then
     /tmp/scripts/init-db.sh
