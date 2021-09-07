@@ -41,7 +41,7 @@ cmake_options=(
   # -DPLUGIN_AUTH_PAM=NO
   # -DPLUGIN_AUTH_PAM_V1=NO
   -DPLUGIN_AUTH_TEST_PLUGIN=NO #unnecessary for release
-  -DPLUGIN_BLACKHOLE=NO        #unnecessary for release
+  -DPLUGIN_BLACKHOLE=YES       #unnecessary for release
   -DPLUGIN_CONNECT=YES
   # -DPLUGIN_CRACKLIB_PASSWORD_CHECK=NO
   -DPLUGIN_DAEMON_EXAMPLE=NO #unnecessary for release
@@ -85,7 +85,10 @@ cmake_options=(
   -DAWS_SDK_EXTERNAL_PROJECT=ON
 )
 
-cmake -LAH --parallel="${CORES}" -GNinja "${cmake_options[@]}" /tmp/server 2>&1 | tee /tmp/up/ubuntu/cmake-options.txt
-# cmake -B /tmp/build -S /tmp/server -DCMAKE_EXE_LINKER_FLAGS='-ltcmalloc' -Wno-dev -DWITH_SAFEMALLOC=OFF -DCMAKE_BUILD_TYPE=MinSizeRel -DWITH_URING=ON -DWITH_UNIT_TESTS=OFF -DWITH_WSREP=OFF -DTMPDIR=/tmp -DCONNECT_WITH_MONGO=ON -DWITH_ROCKSDB_JEMALLOC=ON -LAH 2>&1 | tee /tmp/up/ubuntu/cmake-options.txt
+cmake -LAH --parallel="$(nproc)" -GNinja "${cmake_options[@]}" /tmp/server 2>&1 | tee /tmp/cmake-options.txt
+# cmake -B /tmp/build -S /tmp/server -DCMAKE_EXE_LINKER_FLAGS='-ltcmalloc' -Wno-dev -DWITH_SAFEMALLOC=OFF -DCMAKE_BUILD_TYPE=MinSizeRel -DWITH_URING=ON -DWITH_UNIT_TESTS=OFF -DWITH_WSREP=OFF -DTMPDIR=/tmp -DCONNECT_WITH_MONGO=ON -DWITH_ROCKSDB_JEMALLOC=ON -LAH 2>&1 | tee /tmp/cmake-options.txt
+# cmake -B /tmp/build -S /tmp/server -DCMAKE_EXE_LINKER_FLAGS='-ltcmalloc' -Wno-dev -DWITH_SAFEMALLOC=OFF -DCMAKE_BUILD_TYPE=MinSizeRel -DWITH_WSREP=OFF -DCONNECT_WITH_MONGO=OFF -LAH 2>&1 | tee /tmp/cmake-options.txt
 
-cmake --build /tmp/build --parallel "${CORES}" --target package | tee /tmp/up/ubuntu/cmake-output.txt
+cmake --build /tmp/build --parallel "$(nproc)" | tee /tmp/cmake-output.txt
+
+cmake --build /tmp/build --parallel "$(nproc)" --target package | tee /tmp/cmake-package.txt
