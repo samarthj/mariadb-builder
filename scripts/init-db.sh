@@ -1,6 +1,8 @@
 #!/bin/bash
 # Initializes database with timezone info and root password, plus optional extra db/user
 
+useradd mysql || true
+
 # Install db
 /usr/local/mysql/scripts/mariadb-install-db \
   --basedir=/usr/local/mysql \
@@ -18,7 +20,7 @@ else
   echo "$default_tz" >/etc/timezone
 fi
 
-ln -s /usr/local/mysql/support-files/systemd/* /usr/lib/systemd/system/*no
+ln -s /usr/local/mysql/support-files/systemd/* /usr/lib/systemd/system/
 
 /usr/local/mysql/bin/mariadbd --user mysql &
 sleep 30
