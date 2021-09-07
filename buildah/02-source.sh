@@ -10,11 +10,12 @@ source_image=$(buildah images \
 source_container=$(buildah containers --format "{{.ContainerID}},{{.ContainerName}}" --filter "name=$source_image_name" | cut -f1 -d,)
 if [ -z "$source_image" ] && [ -z "$source_container" ]; then
   # shellcheck disable=SC2154
-  source=$(buildah from "$common_image")
+  source=$(buildah from "$common_image_name")
   echo -e "Working container - $source"
-  buildah run "$source" apt update
-  buildah run "$source" apt install -y --no-install-recommends gnupg git ca-certificates
-  buildah run "$source" git clone \
+  buildah run "$source" -- echo \$PATH
+  buildah run "$source" -- sh -c "apt update"
+  buildah run "$source" -- sh -c "apt install -y --no-install-recommends gnupg git ca-certificates"
+  buildah run "$source" -- git clone \
     --depth=1 \
     --recurse-submodules \
     --shallow-submodules \
